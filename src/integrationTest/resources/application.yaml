@@ -1,0 +1,9 @@
+spring:
+  data:
+    mongodb:
+      host: ${embedded.mongodb.host}
+      port: ${embedded.mongodb.port}
+      database: ${embedded.mongodb.database}
+      username: ${embedded.mongodb.username}
+      password: ${embedded.mongodb.password}
+      authentication-database: admin

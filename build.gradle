@@ -80,6 +80,15 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "com.tngtech.archunit:archunit-junit5:${archUnit}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    "integrationTestImplementation"("org.springframework.cloud:spring-cloud-starter-bootstrap")
+    "integrationTestImplementation"("io.cucumber:cucumber-java")
+    "integrationTestImplementation"("io.cucumber:cucumber-spring")
+    "integrationTestImplementation"("io.cucumber:cucumber-junit-platform-engine")
+    "integrationTestImplementation"("org.junit.platform:junit-platform-suite")
+    "integrationTestImplementation"("com.playtika.testcontainers:embedded-mongodb")
+
+    "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-console")
 }
 
 def ver = semver.version
@@ -92,6 +101,26 @@ tasks.named('test') {
     testLogging {
         events("started", "passed", "skipped", "failed")
     }
+}
+
+tasks.register('consoleLauncherTest') {
+    dependsOn(assemble, testClasses)
+    doLast {
+        javaexec {
+            classpath = sourceSets.integrationTest.runtimeClasspath
+            main = 'org.junit.platform.console.ConsoleLauncher'
+            args = [
+                '--include-engine', 'cucumber',
+                '--details', 'tree',
+                '--scan-classpath'
+            ]
+        }
+    }
+}
+
+integrationTest {
+    dependsOn consoleLauncherTest
+    exclude('**/*')
 }
 
 distTar {
@@ -116,7 +145,6 @@ bootJar {
 test {
     exclude("integrationTest")
 }
-
 
 def excludeAnalysisFiles = [
     '**/application/**',

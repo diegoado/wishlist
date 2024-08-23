@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class WishlistService {
 
-    private static final int MAX_WISHLIST_SIZE = 10;
+    private static final int MAX_WISHLIST_SIZE = 20;
 
     private static final Logger logger = LoggerFactory.getLogger(WishlistService.class);
 
