@@ -1,0 +1,69 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: wishlist
+
+error:
+  handling:
+    add-path-to-error: false
+    http-status-in-json-response: true
+    search-super-class-hierarchy: true
+    full-stacktrace-http-statuses: 5XX
+    json-field-names:
+      fieldErrors: field_errors
+      globalErrors: global_errors
+      parameterErrors: parameter_errors
+    http-statuses:
+      com.mychallenge.wishlist.domain.exception:
+        EntityNotFoundException: not_found
+        MaxWishlistSizeReachedException: bad_request
+    codes:
+      org.springframework.web.method.annotation:
+        HandlerMethodValidationException: VALIDATION_FAILED
+    messages:
+      com.mychallenge.wishlist.domain.exception:
+        EntityNotFoundException:
+        MaxWishlistSizeReachedException: Max wishlist size reached.
+      NotNull: Field mustn't be null.
+      NotBlank: Field mustn't be blank.
+      Size: Field size isn't on allowed range.
+
+springdoc:
+  api-docs:
+    path: /api-docs
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      type: b3,w3c
+  health:
+    livenessState:
+      enabled: false
+    readinessState:
+      enabled: false
+  endpoint:
+    shutdown:
+      enabled: false
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      show-components: always
+      group:
+        readiness:
+          include:
+            - readinessState
+            - mongo
+        liveness:
+          include:
+            - livenessState
+            - diskSpace
+            - ping
+  endpoints:
+    web:
+      exposure:
+        include: info,health,metrics

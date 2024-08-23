@@ -1,0 +1,187 @@
+plugins {
+    id 'application'
+	id 'org.springframework.boot' version '3.2.8'
+	id 'io.spring.dependency-management' version '1.1.6'
+    id 'jacoco'
+    id 'info.solidsoft.pitest' version '1.15.0'
+    id 'com.github.jmongard.git-semver-plugin' version '0.12.6'
+    id 'org.unbroken-dome.test-sets' version '4.1.0'
+}
+
+ext {
+    set('springCloud', '2023.0.3')
+    set('errorHandler', '4.3.0')
+    set('springDocs', '2.6.0')
+    set('testContainers', '3.1.7')
+    set('jupiter', '5.10.3')
+    set('cucumber', '7.18.1')
+    set('archUnit', '1.3.0')
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+application {
+    mainClass = 'com.mychallenge.wishlist.WishlistApplication'
+}
+
+testSets {
+    create("integrationTest")
+}
+
+semver {
+    defaultPreRelease = ""
+    groupVersionIncrements = true
+    noDirtyCheck = false
+    noAutoBump = true
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+    mavenLocal()
+	mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloud}"
+        mavenBom "org.junit:junit-bom:${jupiter}"
+        mavenBom "io.cucumber:cucumber-bom:${cucumber}"
+        mavenBom "com.playtika.testcontainers:testcontainers-spring-boot-bom:${testContainers}"
+    }
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    implementation 'io.micrometer:micrometer-tracing'
+    implementation "io.github.wimdeblauwe:error-handling-spring-boot-starter:${errorHandler}"
+
+    runtimeOnly "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocs}"
+    runtimeOnly 'io.micrometer:micrometer-tracing-bridge-otel'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "com.tngtech.archunit:archunit-junit5:${archUnit}"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+def ver = semver.version
+
+group = 'com.mychallenge'
+version = ver
+
+tasks.named('test') {
+	useJUnitPlatform()
+    testLogging {
+        events("started", "passed", "skipped", "failed")
+    }
+}
+
+distTar {
+    enabled = false
+}
+
+distZip {
+    enabled = false
+}
+
+springBoot {
+    buildInfo()
+}
+
+bootJar {
+    manifest {
+        attributes 'Implementation-Title': 'wishlist'
+        attributes 'Implementation-Version': project.version
+    }
+}
+
+test {
+    exclude("integrationTest")
+}
+
+
+def excludeAnalysisFiles = [
+    '**/application/**',
+    '**/persistence/projection/**',
+    '**/persistence/entity/**',
+    '**/WishlistApplication**',
+    '**/ProductEntity**',
+    '**/WishlistEntity**',
+    '**/WishlistId**'
+]
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        csv.required = false
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn test
+
+    violationRules {
+        rule {
+            element = 'CLASS'
+
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.9
+            }
+        }
+        rule {
+            element = 'CLASS'
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.8
+            }
+        }
+    }
+    afterEvaluate {
+        getClassDirectories().setFrom(classDirectories.files.collect {
+            fileTree(dir: it, excludes: excludeAnalysisFiles)
+        })
+    }
+}
+
+check {
+    dependsOn jacocoTestCoverageVerification
+}
+
+pitest {
+    junit5PluginVersion.set('1.2.1')
+    avoidCallsTo.set(['kotlin.jvm.internal', 'org.slf4j'])
+    mutators.set(['DEFAULTS'])
+    testSourceSets.set([sourceSets.test])
+    mainSourceSets.set([sourceSets.main])
+    jvmArgs.set(["-Xmx2g"])
+    threads.set(Runtime.getRuntime().availableProcessors())
+    outputFormats.set(["XML", "HTML"])
+    excludedClasses.set(excludeAnalysisFiles.stream().map { it.replace("/", ".") }.toList())
+    mutationThreshold.set(80)
+    coverageThreshold.set(80)
+}
