@@ -3,3 +3,7 @@ embedded:
     dockerImage: mongodb/mongodb-community-server:7.0.12-ubuntu2204
     username: wishlist
     password: mongodb2024
+    check-command:
+      - mongosh
+      - --eval
+      - db.adminCommand('ping')

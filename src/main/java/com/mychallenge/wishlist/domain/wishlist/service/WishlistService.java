@@ -9,14 +9,16 @@ import com.mychallenge.wishlist.domain.wishlist.repository.WishlistRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class WishlistService {
 
-    private static final int MAX_WISHLIST_SIZE = 20;
-
     private static final Logger logger = LoggerFactory.getLogger(WishlistService.class);
+
+    @Value("${wishlist.max-size:20}")
+    private int maxWishlistSize;
 
     private final WishlistRepository wishlistRepository;
 
@@ -72,13 +74,13 @@ public class WishlistService {
          *
          *  Approach to catch this scenario: optimistic lock
          */
-        if (wishlistSize + 1 > MAX_WISHLIST_SIZE) {
+        if (wishlistSize + 1 > maxWishlistSize) {
             logger.atError()
                 .setMessage("wishlist size exceeds max wishlist size")
                 .addKeyValue("client", client)
                 .addKeyValue("product", product)
                 .addKeyValue("wishlistSize", wishlistSize)
-                .addKeyValue("maxWishlistSize", MAX_WISHLIST_SIZE)
+                .addKeyValue("maxWishlistSize", maxWishlistSize)
                 .log();
 
             throw new MaxWishlistSizeReachedException();
@@ -104,11 +106,11 @@ public class WishlistService {
 
         if (!existsProductInClientWishlist) {
             logger.atError()
-                .setMessage("wishlist not found or empty")
+                .setMessage("wishlist not found or does not contain product")
                 .addKeyValue("client", client)
                 .log();
 
-            throw new EntityNotFoundException("Wishlist not found or empty.");
+            throw new EntityNotFoundException("Wishlist not found or does not contain product.");
         }
 
         var wishlist = wishlistRepository.removeProductFromWishlistById(

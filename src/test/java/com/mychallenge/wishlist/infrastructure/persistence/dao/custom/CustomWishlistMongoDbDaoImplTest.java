@@ -18,6 +18,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -93,7 +95,7 @@ public class CustomWishlistMongoDbDaoImplTest {
                 )
             ).thenReturn(wishlist);
 
-            suite.upsertProductById("wishlistId", product);
+            var wishlist = suite.upsertProductById("wishlistId", product);
 
             verify(mongoTemplate).findAndModify(
                 any(Query.class),
@@ -101,6 +103,8 @@ public class CustomWishlistMongoDbDaoImplTest {
                 any(FindAndModifyOptions.class),
                 eq(WishlistMongoDBEntity.class)
             );
+
+            assertNotNull(wishlist);
         }
     }
 
@@ -119,7 +123,7 @@ public class CustomWishlistMongoDbDaoImplTest {
                 )
             ).thenReturn(wishlist);
 
-            suite.removeProductById("wishlistId", product);
+            var optional = suite.removeProductById("wishlistId", product);
 
             verify(mongoTemplate).findAndModify(
                 any(Query.class),
@@ -127,6 +131,8 @@ public class CustomWishlistMongoDbDaoImplTest {
                 any(FindAndModifyOptions.class),
                 eq(WishlistMongoDBEntity.class)
             );
+
+            assertTrue(optional.isPresent());
         }
     }
 }

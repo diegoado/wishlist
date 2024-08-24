@@ -104,7 +104,8 @@ tasks.named('test') {
 }
 
 tasks.register('consoleLauncherTest') {
-    dependsOn(assemble, testClasses)
+    dependsOn(assemble, integrationTestClasses)
+
     doLast {
         javaexec {
             classpath = sourceSets.integrationTest.runtimeClasspath

@@ -7,3 +7,27 @@ spring:
       username: ${embedded.mongodb.username}
       password: ${embedded.mongodb.password}
       authentication-database: admin
+
+wishlist.max-size: 5
+
+error:
+  handling:
+    add-path-to-error: false
+    http-status-in-json-response: true
+    search-super-class-hierarchy: true
+    full-stacktrace-http-statuses: 5XX
+    json-field-names:
+      fieldErrors: field_errors
+      globalErrors: global_errors
+      parameterErrors: parameter_errors
+    http-statuses:
+      com.mychallenge.wishlist.domain.exception:
+        EntityNotFoundException: not_found
+        MaxWishlistSizeReachedException: bad_request
+    codes:
+      org.springframework.web.method.annotation:
+        HandlerMethodValidationException: VALIDATION_FAILED
+    messages:
+      com.mychallenge.wishlist.domain.exception:
+        EntityNotFoundException:
+        MaxWishlistSizeReachedException: Max wishlist size reached.

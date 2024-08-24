@@ -85,7 +85,7 @@ sdk install java 21.0.2-oracle
 
 Now, we can start wishlist application container and their dependencies:
 
-```bash
+```shell
 docker-compose up
 ```
 
@@ -134,12 +134,42 @@ password: mongodb
 
 If you prefer, is possible start the wishlist application standalone, so we first make gradlew wrapper executable:
 
-```bash
+```shell
 chmod +x gradlew
 ```
 
 And now, type the follow command, replacing application required environment variables:
 
-```bash
+```shell
 SPRING_PROFILES_ACTIVE=local MONGODB_HOST=<<host>> MONGODB_PORT=<<port>> MONGODB_USERNAME=<<username>> MONGODB_PASSWORD=<<password>> ./gradlew bootRun
+```
+
+## Running Tests
+
+Wishlist application had unit, integration and mutation tests implemented, so we just need type:
+
+**To run unit tests
+
+```shell
+./gradlew test
+```
+
+**To run integration tests
+
+```shell
+./gradlew integrationTest
+```
+
+**To run mutation test
+
+```shell
+./gradlew pitest
+```
+
+## Generate reports
+
+**To check code coverage
+
+```shell
+./gradlew jacocoTestCoverageVerification jacocoTestReport
 ```

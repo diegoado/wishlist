@@ -6,6 +6,7 @@ import com.mychallenge.wishlist.domain.wishlist.ProductEntity;
 import com.mychallenge.wishlist.domain.wishlist.WishlistEntity;
 import com.mychallenge.wishlist.domain.wishlist.WishlistId;
 import com.mychallenge.wishlist.domain.wishlist.repository.WishlistRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,9 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -35,6 +38,11 @@ public class WishlistServiceTest {
 
     @InjectMocks
     private WishlistService suite;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(suite, "maxWishlistSize", 20);
+    }
 
     @Nested
     class ExistsProductInClientWishlist {
@@ -64,9 +72,11 @@ public class WishlistServiceTest {
         void shouldReturnWishlist() {
             when(wishlistRepository.getWishlistById(any())).thenReturn(wishlist);
 
-            suite.getClientWishlist("client");
+            var wishlist = suite.getClientWishlist("client");
 
             verify(wishlistRepository).getWishlistById(any());
+
+            assertNotNull(wishlist);
         }
     }
 
@@ -84,13 +94,29 @@ public class WishlistServiceTest {
         }
 
         @Test
+        @DisplayName("should upsert a product to wishlist until its maximum size")
+        void shouldUpsertAProductToWishlistUntilItsMaximumSize() {
+            when(wishlistRepository.countProductsInWishlist(any())).thenReturn(19);
+
+            when(wishlistRepository.upsertProductToWishlistById(any(), any())).thenReturn(wishlist);
+
+            var wishlist = suite.upsertProductToClientWishlist("client", "product");
+
+            verify(wishlistRepository).upsertProductToWishlistById(any(), any());
+
+            assertNotNull(wishlist);
+        }
+
+        @Test
         @DisplayName("should upsert new product to wishlist")
         void shouldUpsertNewProductToWishlist() {
             when(wishlistRepository.upsertProductToWishlistById(any(), any())).thenReturn(wishlist);
 
-            suite.upsertProductToClientWishlist("client", "product");
+            var wishlist = suite.upsertProductToClientWishlist("client", "product");
 
             verify(wishlistRepository).upsertProductToWishlistById(any(), any());
+
+            assertNotNull(wishlist);
         }
     }
 
